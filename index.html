@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pikachu Vocabulary Match</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#eaffea,#c8f5c8);font-family:Arial,sans-serif;color:#14532d}
+.wrap{max-width:1200px;margin:auto;padding:10px}
+.head{background:#20a447;color:white;border:4px solid #116b2d;border-radius:18px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;box-shadow:0 4px #116b2d}
+h1{font-size:21px;margin:0;text-shadow:1px 2px #116b2d}
+.stats{display:flex;gap:7px}
+.stat{background:white;color:#166534;border:3px solid #116b2d;border-radius:11px;padding:4px 10px;text-align:center;font-weight:bold}
+.stat b{display:block;font-size:18px}
+.controls{text-align:center;padding:10px}
+button{padding:8px 14px;margin:3px;border:3px solid #116b2d;border-radius:11px;background:white;color:#14532d;font-weight:bold;cursor:pointer;box-shadow:0 3px #116b2d}
+.board{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;background:#159447;border:5px solid #0d6b2a;border-radius:15px;padding:8px;box-shadow:inset 0 0 0 3px #73e28d}
+.card{height:95px;background:linear-gradient(#fff,#effff2);border:3px solid #0c6b2b;border-radius:11px;box-shadow:0 3px #0c6b2b;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;cursor:pointer;font-weight:bold;transition:.15s;user-select:none}
+.card.en{font-size:12px;color:#166534;flex-direction:column}
+.card.en .pic{font-size:27px;line-height:31px;margin-bottom:3px}
+.card.vi{font-size:13px}
+.card.selected{outline:4px solid #facc15;transform:scale(1.03)}
+.card.ok{background:#bbf7d0;border-color:#15803d}
+.card.bad{background:#fecaca;border-color:#dc2626}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.box{background:white;border:5px solid #166534;border-radius:20px;padding:25px;text-align:center;box-shadow:0 8px #0b5427;max-width:400px}
+.box h2{color:#166534}
+.big{font-size:35px;font-weight:900;color:#16a34a}
+@media(max-width:1000px){.board{grid-template-columns:repeat(8,1fr)}}
+@media(max-width:700px){.head{display:block;text-align:center}.stats{justify-content:center;margin-top:7px}.board{grid-template-columns:repeat(6,1fr);gap:5px;padding:6px}.card{height:88px;font-size:11px!important}.card.en .pic{font-size:24px}}
+@media(max-width:450px){.board{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="head">
+<h1>⚡ Pikachu Vocabulary Match ⚡</h1>
+<div class="stats">
+<div class="stat">BÀN<b>1</b></div>
+<div class="stat">LƯỢT ĐÔI<b id="mv">0</b></div>
+<div class="stat">ĐIỂM<b id="sc">0</b></div>
+</div>
+</div>
+<div class="controls">
+<button onclick="hint()">💡 Hint (-20)</button>
+<button onclick="newGame()">🔄 New Game</button>
+</div>
+<div style="text-align:center;font-weight:bold;margin-bottom:7px">
+Match each English word with its Vietnamese meaning.
+</div>
+<div id="board" class="board"></div>
+</div>
+
+<div id="modal" class="modal">
+<div class="box">
+<h2>🎉 Excellent!</h2>
+<p>You matched all the vocabulary pairs.</p>
+<div id="final" class="big"></div>
+<p id="fm"></p>
+<button onclick="newGame()">🔄 Play Again</button>
+</div>
+</div>
+
+<script>
+const cards=[{"t": "en", "p": 0, "x": "Accomplish a goal", "icon": "🏆"}, {"t": "vi", "p": 0, "x": "hoàn thành", "icon": ""}, {"t": "en", "p": 1, "x": "Make a goal", "icon": "🎯"}, {"t": "vi", "p": 1, "x": "đặt mục tiêu", "icon": ""}, {"t": "en", "p": 2, "x": "Priority / prioritize", "icon": "⭐"}, {"t": "vi", "p": 2, "x": "sự ưu tiên / ưu tiên", "icon": ""}, {"t": "en", "p": 3, "x": "Crucial / important", "icon": "❗"}, {"t": "vi", "p": 3, "x": "quan trọng", "icon": ""}, {"t": "en", "p": 4, "x": "Cope with / deal with / solve / resolve", "icon": "🛠️"}, {"t": "vi", "p": 4, "x": "giải quyết", "icon": ""}, {"t": "en", "p": 5, "x": "Conflict", "icon": "⚔️"}, {"t": "vi", "p": 5, "x": "xung đột", "icon": ""}, {"t": "en", "p": 6, "x": "Self-aware", "icon": "🪞"}, {"t": "vi", "p": 6, "x": "tự nhận thức", "icon": ""}, {"t": "en", "p": 7, "x": "Positive", "icon": "😊"}, {"t": "vi", "p": 7, "x": "tích cực", "icon": ""}, {"t": "en", "p": 8, "x": "Negative", "icon": "☁️"}, {"t": "vi", "p": 8, "x": "tiêu cực", "icon": ""}, {"t": "en", "p": 9, "x": "Well-being", "icon": "❤️"}, {"t": "vi", "p": 9, "x": "sức khỏe", "icon": ""}, {"t": "en", "p": 10, "x": "Project", "icon": "📁"}, {"t": "vi", "p": 10, "x": "dự án", "icon": ""}, {"t": "en", "p": 11, "x": "Adolescence", "icon": "🧑"}, {"t": "vi", "p": 11, "x": "thanh thiếu niên", "icon": ""}, {"t": "en", "p": 12, "x": "Deadline / due date", "icon": "⏰"}, {"t": "vi", "p": 12, "x": "hạn chót", "icon": ""}, {"t": "en", "p": 13, "x": "Benefit", "icon": "🎁"}, {"t": "vi", "p": 13, "x": "lợi ích", "icon": ""}, {"t": "en", "p": 14, "x": "Improve", "icon": "📈"}, {"t": "vi", "p": 14, "x": "cải thiện", "icon": ""}, {"t": "en", "p": 15, "x": "Anxiety", "icon": "😟"}, {"t": "vi", "p": 15, "x": "lo lắng", "icon": ""}, {"t": "en", "p": 16, "x": "Assignment", "icon": "📝"}, {"t": "vi", "p": 16, "x": "nhiệm vụ được giao", "icon": ""}, {"t": "en", "p": 17, "x": "Self-disciplined", "icon": "💪"}, {"t": "vi", "p": 17, "x": "kỷ luật", "icon": ""}, {"t": "en", "p": 18, "x": "Stay up late", "icon": "🌙"}, {"t": "vi", "p": 18, "x": "thức khuya", "icon": ""}, {"t": "en", "p": 19, "x": "Want to", "icon": "💭"}, {"t": "vi", "p": 19, "x": "muốn", "icon": ""}, {"t": "en", "p": 20, "x": "Participate in / take part in / join in", "icon": "🤝"}, {"t": "vi", "p": 20, "x": "tham gia", "icon": ""}, {"t": "en", "p": 21, "x": "Succeed", "icon": "🏅"}, {"t": "vi", "p": 21, "x": "thành công", "icon": ""}, {"t": "en", "p": 22, "x": "Success", "icon": "🥇"}, {"t": "vi", "p": 22, "x": "sự thành công", "icon": ""}, {"t": "en", "p": 23, "x": "Concept", "icon": "💡"}, {"t": "vi", "p": 23, "x": "khái niệm", "icon": ""}, {"t": "en", "p": 24, "x": "Complete / finish / accomplish", "icon": "✅"}, {"t": "vi", "p": 24, "x": "hoàn thành", "icon": ""}, {"t": "en", "p": 25, "x": "Diet", "icon": "🥗"}, {"t": "vi", "p": 25, "x": "chế độ ăn uống", "icon": ""}];
+let deck=[],first=null,locked=false,moves=0,score=0,matched=0;
+
+function sh(a){
+ for(let i=a.length-1;i>0;i--){
+  let j=Math.floor(Math.random()*(i+1));
+  [a[i],a[j]]=[a[j],a[i]];
+ }
+ return a;
+}
+
+function newGame(){
+ deck=sh([...cards]);
+ first=null;locked=false;moves=0;score=0;matched=0;
+ mv.textContent=0;sc.textContent=0;
+ modal.classList.remove('show');
+ draw();
+}
+
+function draw(){
+ board.innerHTML='';
+ deck.forEach(c=>{
+  let e=document.createElement('div');
+  e.className='card '+c.t;
+  e.dataset.p=c.p;
+  e.innerHTML=c.t==='en'
+   ? '<div class="pic">'+c.icon+'</div><div>'+c.x+'</div>'
+   : '<div>'+c.x+'</div>';
+  e.onclick=()=>pick(e);
+  board.appendChild(e);
+ });
+}
+
+function pick(e){
+ if(locked||e.classList.contains('done')||e===first)return;
+
+ if(!first){
+  first=e;
+  e.classList.add('selected');
+  return;
+ }
+
+ let second=e;
+ locked=true;
+ second.classList.add('selected');
+ moves++;
+ mv.textContent=moves;
+
+ if(first.dataset.p===second.dataset.p){
+  score+=100;
+  matched++;
+  sc.textContent=score;
+  first.classList.add('ok');
+  second.classList.add('ok');
+
+  setTimeout(()=>{
+   first.classList.add('done');
+   second.classList.add('done');
+   first.style.visibility='hidden';
+   second.style.visibility='hidden';
+   first=null;
+   locked=false;
+   if(matched===26)finish();
+  },350);
+
+ }else{
+  score=Math.max(0,score-10);
+  sc.textContent=score;
+  first.classList.add('bad');
+  second.classList.add('bad');
+
+  setTimeout(()=>{
+   first.classList.remove('selected','bad');
+   second.classList.remove('selected','bad');
+   first=null;
+   locked=false;
+  },650);
+ }
+}
+
+function hint(){
+ if(locked)return;
+
+ let a=[...document.querySelectorAll('.card:not(.done)')];
+ let m={};
+ a.forEach(e=>(m[e.dataset.p]??=[]).push(e));
+
+ let v=Object.values(m).filter(x=>x.length===2);
+ if(!v.length)return;
+
+ let q=v[Math.floor(Math.random()*v.length)];
+ score=Math.max(0,score-20);
+ sc.textContent=score;
+
+ q.forEach(e=>e.classList.add('selected'));
+ setTimeout(()=>q.forEach(e=>e.classList.remove('selected')),700);
+}
+
+function finish(){
+ setTimeout(()=>{
+  final.textContent=score+' points';
+  fm.textContent='Moves: '+moves;
+  modal.classList.add('show');
+ },400);
+}
+
+newGame();
+</script>
+</body>
+</html>
